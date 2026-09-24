@@ -17,7 +17,9 @@ export type ProductRecord = {
   type: ProductType; status: ProductStatus; imageUrl?: string; benefits: string[];
   specifications: Array<{ label: string; value: string; confidence: 'verified' | 'needs_review' }>;
   source: 'LINK' | 'IMAGE' | 'MANUAL'; sourceUrl?: string; createdAt: string;
+  categoryId?: string; categoryName?: string; compareAtPrice?: number; stock?: number | null; sku?: string;
 };
+export type CategoryRecord = { id: string; storeId: string; name: string; slug: string; createdAt: string };
 export type CustomerRecord = {
   id: string; storeId: string; name: string; phone: string; whatsapp?: string; email?: string;
   orderCount: number; totalSpent: number; lastOrderAt: string; createdAt: string;
@@ -31,7 +33,7 @@ export type OrderRecord = {
 };
 export type NotificationRecord = { id: string; storeId: string; userId: string; title: string; body: string; read: boolean; createdAt: string };
 export type LocalDb = {
-  users: UserRecord[]; organizations: OrganizationRecord[]; stores: StoreRecord[]; products: ProductRecord[];
+  users: UserRecord[]; organizations: OrganizationRecord[]; stores: StoreRecord[]; products: ProductRecord[]; categories: CategoryRecord[];
   customers: CustomerRecord[]; orders: OrderRecord[]; notifications: NotificationRecord[];
 };
 

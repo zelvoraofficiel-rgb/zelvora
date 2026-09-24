@@ -28,9 +28,12 @@ export function mapStore(row: any): StoreRecord {
     createdAt: row.created_at, publishedAt: row.published_at || undefined };
 }
 export function mapProduct(row: any): ProductRecord {
+  const category = Array.isArray(row.categories) ? row.categories[0] : row.categories;
   return { id: row.id, storeId: row.store_id, name: row.name, slug: row.slug, description: row.description, price: Number(row.price),
     type: row.product_type, status: row.status, imageUrl: row.image_path || undefined, benefits: row.benefits || [], specifications: row.specifications || [],
-    source: row.source_type, sourceUrl: row.source_url || undefined, createdAt: row.created_at };
+    source: row.source_type, sourceUrl: row.source_url || undefined, createdAt: row.created_at, categoryId: row.category_id || undefined,
+    categoryName: category?.name, compareAtPrice: row.compare_at_price === null || row.compare_at_price === undefined ? undefined : Number(row.compare_at_price),
+    stock: row.stock === null || row.stock === undefined ? null : Number(row.stock), sku: row.sku || undefined };
 }
 export function mapCustomer(row: any): CustomerRecord {
   return { id: row.id, storeId: row.store_id, name: row.name, phone: row.phone, whatsapp: row.whatsapp || undefined, email: row.email || undefined,

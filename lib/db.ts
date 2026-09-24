@@ -5,7 +5,7 @@ import type { LocalDb } from '@/lib/types';
 
 const dataDir = path.join(process.cwd(), 'data');
 const dbFile = path.join(dataDir, 'local-db.json');
-const emptyDb = (): LocalDb => ({ users: [], organizations: [], stores: [], products: [], customers: [], orders: [], notifications: [] });
+const emptyDb = (): LocalDb => ({ users: [], organizations: [], stores: [], products: [], categories: [], customers: [], orders: [], notifications: [] });
 let writeQueue = Promise.resolve();
 
 async function ensureDb() {
@@ -16,7 +16,10 @@ async function ensureDb() {
 export async function readDb(): Promise<LocalDb> {
   await ensureDb();
   const raw = await readFile(dbFile, 'utf8');
-  return JSON.parse(raw) as LocalDb;
+  const db = JSON.parse(raw) as LocalDb;
+  // Keep development data created before categories were introduced compatible.
+  db.categories ||= [];
+  return db;
 }
 
 /** Development adapter only. Production must use the PostgreSQL/Prisma adapter. */
