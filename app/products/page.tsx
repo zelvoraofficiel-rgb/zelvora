@@ -1,3 +1,3 @@
-import { AppNav } from '@/components/app-nav';
+import { MerchantShell } from '@/components/merchant-shell';
 import { ProductsClient } from '@/components/products-client';
-export default function ProductsPage() { return <main className="min-h-screen bg-[#F7F7FB]"><AppNav active="products" /><div className="mx-auto max-w-7xl px-5 py-8 sm:px-8"><ProductsClient /></div></main>; }
+export default function ProductsPage() { return <MerchantShell active="products"><ProductsClient /></MerchantShell>; }
