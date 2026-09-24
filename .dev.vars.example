@@ -1,0 +1,5 @@
+# Local Worker preview configuration — never commit real secrets.
+NEXTJS_ENV=development
+NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
+ZELVORA_DATA_PROVIDER=supabase

@@ -1,0 +1,13 @@
+node_modules
+.next
+.env
+.env.local
+*.log
+public/uploads/*
+!public/uploads/.gitkeep
+data/local-db.json
+.open-next
+.dev.vars
+.wrangler
+cloudflare-env.d.ts
+*.zip
