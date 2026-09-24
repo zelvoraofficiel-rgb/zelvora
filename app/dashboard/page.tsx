@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { DashboardClient } from '@/components/dashboard-client';
-import { Logo } from '@/components/logo';
-export default function DashboardPage() { return <main className="min-h-screen bg-[#F7F7FB]"><header className="border-b border-slate-200 bg-white"><div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8"><Logo href="/dashboard" /><nav className="hidden items-center gap-5 text-sm font-extrabold text-slate-600 sm:flex"><Link className="text-violet" href="/dashboard">Vue d’ensemble</Link><Link href="/orders">Commandes</Link><Link href="/onboarding">Nouvelle boutique</Link></nav><Link href="/" className="text-sm font-extrabold text-slate-500">Quitter</Link></div></header><div className="mx-auto max-w-7xl px-5 py-8 sm:px-8"><DashboardClient /></div></main>; }
+import { AppNav } from '@/components/app-nav';
+export default function DashboardPage() { return <main className="min-h-screen bg-[#F7F7FB]"><AppNav active="dashboard" /><div className="mx-auto max-w-7xl px-5 py-8 sm:px-8"><DashboardClient /></div></main>; }
