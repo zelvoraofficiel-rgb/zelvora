@@ -1,0 +1,2 @@
+import { Logo } from '@/components/logo'; import { OrdersClient } from '@/components/orders-client';
+export default function OrdersPage(){return <main className="min-h-screen bg-[#F7F7FB]"><header className="border-b border-slate-200 bg-white"><div className="mx-auto max-w-7xl px-5 py-4 sm:px-8"><Logo href="/dashboard" /></div></header><div className="mx-auto max-w-7xl px-5 py-8 sm:px-8"><OrdersClient /></div></main>}
