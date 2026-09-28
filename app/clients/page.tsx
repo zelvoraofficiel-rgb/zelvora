@@ -1,0 +1,1 @@
+import { MerchantShell } from '@/components/merchant-shell';import { ClientsClient } from '@/components/clients-client';export default function Page(){return <MerchantShell active="clients"><ClientsClient/></MerchantShell>}

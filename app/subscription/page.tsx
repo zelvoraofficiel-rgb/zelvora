@@ -1,0 +1,1 @@
+import { MerchantShell } from '@/components/merchant-shell';import { SubscriptionClient } from '@/components/subscription-client';export default function Page(){return <MerchantShell active="subscription"><SubscriptionClient/></MerchantShell>}

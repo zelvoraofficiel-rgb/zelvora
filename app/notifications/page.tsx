@@ -1,0 +1,1 @@
+import { MerchantShell } from '@/components/merchant-shell';import { NotificationsClient } from '@/components/notifications-client';export default function Page(){return <MerchantShell active="notifications"><NotificationsClient/></MerchantShell>}
