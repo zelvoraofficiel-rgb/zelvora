@@ -1,1 +1,1 @@
-import {MerchantShell}from'@/components/merchant-shell';import{AdminSubscriptionsClient}from'@/components/admin-subscriptions-client';export default function Page(){return <MerchantShell active="subscription"><AdminSubscriptionsClient/></MerchantShell>}
+import{AdminShell}from'@/components/admin-shell';import{AdminSubscriptionsClient}from'@/components/admin-subscriptions-client';export default function Page(){return <AdminShell><AdminSubscriptionsClient/></AdminShell>}

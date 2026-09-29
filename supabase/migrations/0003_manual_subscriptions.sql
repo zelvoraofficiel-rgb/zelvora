@@ -92,6 +92,7 @@ declare r public.subscription_payment_requests; v_status text; v_sub uuid; begin
  return jsonb_build_object('request_id',r.id,'status',p_action,'subscription_id',v_sub);
 end $$;
 grant execute on function public.review_manual_payment(uuid,text,text) to authenticated;
+notify pgrst, 'reload schema';
 commit;
 
 -- After applying, promote the real administrator once:

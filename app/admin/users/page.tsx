@@ -1,0 +1,1 @@
+import{AdminShell}from'@/components/admin-shell';import{AdminUsersClient}from'@/components/admin-users-client';export default function Page(){return <AdminShell><AdminUsersClient/></AdminShell>}
