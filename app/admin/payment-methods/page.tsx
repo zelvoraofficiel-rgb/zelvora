@@ -1,0 +1,1 @@
+import {MerchantShell}from'@/components/merchant-shell';import{AdminPaymentMethodsClient}from'@/components/admin-payment-methods-client';export default function Page(){return <MerchantShell active="settings"><AdminPaymentMethodsClient/></MerchantShell>}
