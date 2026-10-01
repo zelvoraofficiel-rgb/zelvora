@@ -25,7 +25,11 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .merchant-dark .text-ink { color:#f8fafc !important; }
 .merchant-dark .text-slate-600,.merchant-dark .text-slate-500,.merchant-dark .text-slate-400 { color:#94a3b8 !important; }
 .merchant-dark input,.merchant-dark select,.merchant-dark textarea { background:#071020 !important; color:#f8fafc !important; border-color:#273550 !important; }
-.merchant-dark article,.merchant-dark .data-card,.merchant-dark .toolbar,.merchant-dark .empty-panel,.merchant-dark .notice-row { border-color:#202d44; }
+.merchant-dark article,.merchant-dark .data-card,.merchant-dark .toolbar,.merchant-dark .empty-panel,.merchant-dark .notice-row { background:#0d1628; color:#f8fafc; border-color:#273550; }
+.merchant-dark label,.merchant-dark h1,.merchant-dark h2,.merchant-dark h3,.merchant-dark strong,.merchant-dark b { color:#f8fafc; }
+.merchant-dark input::placeholder,.merchant-dark textarea::placeholder { color:#64748b; }
+.merchant-dark input[type="checkbox"] { accent-color:#6557f5; }
+.merchant-dark .data-card p { color:#cbd5e1; }
 .merchant-dark table th,.merchant-dark table td { border-color:#202d44; }
 .merchant-dark .shadow-sm { box-shadow:0 10px 30px rgba(0,0,0,.18) !important; }
 .grid-dots { background-image: radial-gradient(#c9c7dd 1px, transparent 1px); background-size: 22px 22px; }
