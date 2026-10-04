@@ -30,6 +30,15 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .merchant-dark input::placeholder,.merchant-dark textarea::placeholder { color:#64748b; }
 .merchant-dark input[type="checkbox"] { accent-color:#6557f5; }
 .merchant-dark .data-card p { color:#cbd5e1; }
+.merchant-dark .data-card label { display:block; color:#e2e8f0; font-weight:700; line-height:1.5; }
+.merchant-dark .data-card label > .form-input,
+.merchant-dark .data-card label > input:not([type="checkbox"]):not([type="color"]),
+.merchant-dark .data-card label > textarea,
+.merchant-dark .data-card label > select { display:block; width:100%; margin-top:.5rem; }
+.merchant-dark .data-card input[type="checkbox"] { width:1rem; height:1rem; margin-right:.55rem; vertical-align:-.15rem; }
+.merchant-dark .data-card hr { margin:1.5rem 0; }
+.merchant-dark .data-card h2 { margin-bottom:.75rem; font-size:1.25rem; font-weight:900; }
+.merchant-dark .data-card textarea { min-height:8rem; resize:vertical; }
 .merchant-dark table th,.merchant-dark table td { border-color:#202d44; }
 .merchant-dark .shadow-sm { box-shadow:0 10px 30px rgba(0,0,0,.18) !important; }
 .grid-dots { background-image: radial-gradient(#c9c7dd 1px, transparent 1px); background-size: 22px 22px; }
