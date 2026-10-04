@@ -9,7 +9,7 @@ export function BuyForm({ storeSlug, product, currency, color }: Props) {
     event.preventDefault(); setLoading(true); setError(''); const form = new FormData(event.currentTarget);
     const payload = Object.fromEntries(form.entries());
     const response = await fetch('/api/public/orders', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...payload, storeSlug, productId: product.id, quantity }) }); const json = await response.json(); setLoading(false);
-    if (!response.ok) { setError(json.error || 'Impossible d’enregistrer la commande.'); return; } setConfirmation(json.order);
+    if (!response.ok) { setError(json.error || 'Impossible d’enregistrer la commande.'); return; } const trackers=window as any; trackers.fbq?.('track','Purchase',{value:Number(json.order.total),currency:json.order.currency}); trackers.ttq?.track?.('CompletePayment',{value:Number(json.order.total),currency:json.order.currency,content_id:product.id,quantity}); setConfirmation(json.order);
   }
   if (confirmation) return <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-center"><p className="text-3xl">✓</p><h3 className="mt-2 text-xl font-black">Commande enregistrée !</h3><p className="mt-2 text-sm leading-6 text-slate-600">Votre référence est <strong>{confirmation.number}</strong>. Le marchand vous contactera pour confirmer la livraison et le paiement.</p></div>;
   return <div className="mt-6"><button type="button" onClick={() => setOpen(!open)} style={{ backgroundColor: color }} className="w-full rounded-xl px-5 py-4 font-extrabold text-white shadow-lg transition hover:brightness-95">{open ? 'Fermer le formulaire' : 'Commander maintenant'} · {total.toLocaleString('fr-FR')} {currency}</button>
