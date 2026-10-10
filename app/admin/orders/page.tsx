@@ -1,0 +1,1 @@
+import{AdminShell}from'@/components/admin-shell';import{AdminDataClient}from'@/components/admin-data-client';export default function Page(){return <AdminShell><AdminDataClient type="orders"/></AdminShell>}
