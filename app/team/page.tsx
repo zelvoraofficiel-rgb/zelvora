@@ -1,0 +1,1 @@
+import{MerchantShell}from'@/components/merchant-shell';import{GeneralSettingsClient}from'@/components/general-settings-client';export default function Page(){return <MerchantShell active="team"><GeneralSettingsClient initialTab="Équipe"/></MerchantShell>}

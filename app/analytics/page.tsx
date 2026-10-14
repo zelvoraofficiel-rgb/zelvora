@@ -1,0 +1,1 @@
+import{MerchantShell}from'@/components/merchant-shell';import{AnalyticsClient}from'@/components/analytics-client';export default function Page(){return <MerchantShell active="analytics"><AnalyticsClient/></MerchantShell>}
