@@ -29,6 +29,7 @@ export type OrderRecord = {
   paymentStatus: 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED'; paymentMethod: 'CASH_ON_DELIVERY';
   currency: string; total: number; quantity: number; productId: string; productName: string;
   delivery: { country: string; city: string; district?: string; address?: string; notes?: string };
+  customer?: { name: string; phone: string; whatsapp?: string; email?: string };
   createdAt: string;
 };
 export type NotificationRecord = { id: string; storeId: string; userId: string; title: string; body: string; read: boolean; createdAt: string };

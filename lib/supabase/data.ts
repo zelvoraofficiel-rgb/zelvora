@@ -42,7 +42,7 @@ export function mapCustomer(row: any): CustomerRecord {
 export function mapOrder(row: any): OrderRecord {
   return { id: row.id, storeId: row.store_id, customerId: row.customer_id, number: row.number, status: row.status, paymentStatus: row.payment_status,
     paymentMethod: row.payment_method, currency: row.currency, total: Number(row.total), quantity: row.quantity, productId: row.product_id,
-    productName: row.product_name, delivery: row.delivery || {}, createdAt: row.created_at };
+    productName: row.product_name, delivery: row.delivery || {}, customer: row.customers ? { name: row.customers.name, phone: row.customers.phone, whatsapp: row.customers.whatsapp || undefined, email: row.customers.email || undefined } : undefined, createdAt: row.created_at };
 }
 export function mapNotification(row: any): NotificationRecord {
   return { id: row.id, storeId: row.store_id, userId: row.user_id, title: row.title, body: row.body || '', read: Boolean(row.read_at), createdAt: row.created_at };
