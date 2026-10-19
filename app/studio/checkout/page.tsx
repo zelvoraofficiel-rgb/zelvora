@@ -1,0 +1,1 @@
+import{MerchantShell}from'@/components/merchant-shell';import{CheckoutFormEditor}from'@/components/checkout-form-editor';export default function Page(){return <MerchantShell active="studio"><CheckoutFormEditor/></MerchantShell>}

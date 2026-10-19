@@ -54,5 +54,10 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .merchant-dark .product-editor-light .text-slate-600,.merchant-dark .product-editor-light .text-slate-500,.merchant-dark .product-editor-light .text-slate-400{color:#64748b !important}
 .merchant-dark .product-editor-light input,.merchant-dark .product-editor-light select,.merchant-dark .product-editor-light textarea{background:#fbfaf6 !important;color:#111827 !important;border-color:#dedbd2 !important}
 .merchant-dark .product-editor-light input::placeholder,.merchant-dark .product-editor-light textarea::placeholder{color:#9ca3af !important}
+.merchant-dark .checkout-editor-light{background:#f8f7f2 !important;color:#111827 !important}
+.merchant-dark .checkout-editor-light article,.merchant-dark .checkout-editor-light section,.merchant-dark .checkout-editor-light aside>div,.merchant-dark .checkout-editor-light .bg-white{background:#fff !important;color:#111827 !important;border-color:#dedbd2 !important}
+.merchant-dark .checkout-editor-light h1,.merchant-dark .checkout-editor-light h2,.merchant-dark .checkout-editor-light h3,.merchant-dark .checkout-editor-light label,.merchant-dark .checkout-editor-light strong{color:#111827 !important}
+.merchant-dark .checkout-editor-light input,.merchant-dark .checkout-editor-light select,.merchant-dark .checkout-editor-light textarea{background:#fbfaf6 !important;color:#111827 !important;border-color:#dedbd2 !important}
+.merchant-dark .checkout-editor-light .text-slate-500,.merchant-dark .checkout-editor-light .text-slate-600{color:#64748b !important}
 .grid-dots { background-image: radial-gradient(#c9c7dd 1px, transparent 1px); background-size: 22px 22px; }
 .gradient-text { background: linear-gradient(100deg, #6557f5 5%, #b13dfa 52%, #f39835 96%); -webkit-background-clip: text; background-clip: text; color: transparent; }
