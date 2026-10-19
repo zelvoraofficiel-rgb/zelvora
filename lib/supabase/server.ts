@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { hasSupabaseConfig, supabasePublishableKey, supabaseUrl } from '@/lib/supabase/config';
+import { hasSupabaseConfig, supabasePublishableKey, supabaseServiceRoleKey, supabaseUrl } from '@/lib/supabase/config';
 
 /**
  * Creates a user-scoped Supabase client. The accessToken callback is required so
