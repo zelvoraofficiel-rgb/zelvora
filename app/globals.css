@@ -41,5 +41,18 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .merchant-dark .data-card textarea { min-height:8rem; resize:vertical; }
 .merchant-dark table th,.merchant-dark table td { border-color:#202d44; }
 .merchant-dark .shadow-sm { box-shadow:0 10px 30px rgba(0,0,0,.18) !important; }
+/* Zones volontairement claires du parcours marchand. */
+.merchant-dark .setup-panel{background:#eff8ff !important;color:#111827 !important;border-color:#bae6fd !important}
+.merchant-dark .setup-panel h2,.merchant-dark .setup-panel strong{color:#111827 !important}
+.merchant-dark .setup-panel p,.merchant-dark .setup-panel small{color:#64748b !important}
+.merchant-dark .setup-panel .setup-step{background:#fff !important;color:#111827 !important;border-color:#dbe3ec !important}
+.merchant-dark .setup-panel .setup-step.is-done{background:#ecfdf5 !important;border-color:#a7f3d0 !important}
+.merchant-dark .setup-panel .setup-step.is-done strong{color:#065f46 !important}
+.merchant-dark .product-editor-light{background:#f8f7f2 !important;color:#111827 !important}
+.merchant-dark .product-editor-light section,.merchant-dark .product-editor-light .bg-white{background:#fff !important;color:#111827 !important;border-color:#dedbd2 !important}
+.merchant-dark .product-editor-light h1,.merchant-dark .product-editor-light h2,.merchant-dark .product-editor-light h3,.merchant-dark .product-editor-light label,.merchant-dark .product-editor-light strong{color:#111827 !important}
+.merchant-dark .product-editor-light .text-slate-600,.merchant-dark .product-editor-light .text-slate-500,.merchant-dark .product-editor-light .text-slate-400{color:#64748b !important}
+.merchant-dark .product-editor-light input,.merchant-dark .product-editor-light select,.merchant-dark .product-editor-light textarea{background:#fbfaf6 !important;color:#111827 !important;border-color:#dedbd2 !important}
+.merchant-dark .product-editor-light input::placeholder,.merchant-dark .product-editor-light textarea::placeholder{color:#9ca3af !important}
 .grid-dots { background-image: radial-gradient(#c9c7dd 1px, transparent 1px); background-size: 22px 22px; }
 .gradient-text { background: linear-gradient(100deg, #6557f5 5%, #b13dfa 52%, #f39835 96%); -webkit-background-clip: text; background-clip: text; color: transparent; }
