@@ -28,7 +28,7 @@ export type OrderRecord = {
   id: string; storeId: string; customerId: string; number: string; status: OrderStatus;
   paymentStatus: 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED'; paymentMethod: 'CASH_ON_DELIVERY';
   currency: string; total: number; quantity: number; productId: string; productName: string;
-  delivery: { country: string; city: string; district?: string; address?: string; notes?: string };
+  delivery: { country: string; city: string; district?: string; address?: string; notes?: string; customFields?: Record<string,string> };
   customer?: { name: string; phone: string; whatsapp?: string; email?: string };
   customerNote?: string;
   createdAt: string;
