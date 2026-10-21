@@ -1,5 +1,6 @@
 import { createHmac, randomBytes, scrypt as scryptCallback, timingSafeEqual } from 'node:crypto';
 import { promisify } from 'node:util';
+import { cache } from 'react';
 import { cookies } from 'next/headers';
 import { readDb } from '@/lib/db';
 import { createSupabasePublicClient } from '@/lib/supabase/server';
@@ -34,7 +35,7 @@ export function supabaseSessionCookies(session: { access_token: string; refresh_
 export function expiredSessionCookie() { return { name: COOKIE_NAME, value: '', options: { ...commonCookie(), maxAge: 0 } }; }
 export function expiredSupabaseSessionCookies() { return [{ name: SUPABASE_ACCESS_COOKIE, value: '', options: { ...commonCookie(), maxAge: 0 } }, { name: SUPABASE_REFRESH_COOKIE, value: '', options: { ...commonCookie(), maxAge: 0 } }]; }
 
-export async function currentUser(): Promise<CurrentUser | null> {
+export const currentUser = cache(async (): Promise<CurrentUser | null> => {
   const cookieStore = await cookies();
   if (useSupabase) {
     const accessToken = cookieStore.get(SUPABASE_ACCESS_COOKIE)?.value; if (!accessToken) return null;
@@ -44,4 +45,4 @@ export async function currentUser(): Promise<CurrentUser | null> {
   }
   const raw = cookieStore.get(COOKIE_NAME)?.value; const session = raw ? decode(raw) : null; if (!session) return null;
   const db = await readDb(); const user = db.users.find((item) => item.id === session.userId); return user ? { id: user.id, email: user.email, name: user.name } : null;
-}
+});

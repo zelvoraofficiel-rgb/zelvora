@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { createSupabaseUserClient } from '@/lib/supabase/server';
 import type { StoreRecord, ProductRecord, OrderRecord, CustomerRecord, NotificationRecord } from '@/lib/types';
 
@@ -48,9 +49,9 @@ export function mapNotification(row: any): NotificationRecord {
   return { id: row.id, storeId: row.store_id, userId: row.user_id, title: row.title, body: row.body || '', read: Boolean(row.read_at), createdAt: row.created_at };
 }
 
-export async function storeForUser(user: SupabaseAppUser) {
+export const storeForUser = cache(async (user: SupabaseAppUser) => {
   const organization = await ensureOrganization(user); const client = clientFor(user);
   const { data, error } = await client.from('stores').select('*').eq('organization_id', organization.id).order('created_at', { ascending: true }).limit(1);
   if (error) fail(error, 'Impossible de lire votre boutique.');
   return { organization, store: data?.[0] ? mapStore(data[0]) : null };
-}
+});
