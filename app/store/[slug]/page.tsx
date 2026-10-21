@@ -8,7 +8,7 @@ import { useSupabase } from '@/lib/supabase/config';
 import type { ProductRecord, StoreRecord } from '@/lib/types';
 import { TrackingPixels } from '@/components/tracking-pixels';
 import { StoreAnalyticsTracker } from '@/components/store-analytics-tracker';
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 export default async function PublicStorePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

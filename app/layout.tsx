@@ -10,5 +10,6 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="fr" suppressHydrationWarning><body>{children}</body></html>;
+  const supabaseOrigin=process.env.NEXT_PUBLIC_SUPABASE_URL;
+  return <html lang="fr" suppressHydrationWarning><head>{supabaseOrigin&&<><link rel="preconnect" href={supabaseOrigin}/><link rel="dns-prefetch" href={supabaseOrigin}/></>}</head><body>{children}</body></html>;
 }
