@@ -1,5 +1,6 @@
 begin;
 drop function if exists public.create_public_order(text,uuid,integer,text,text,text,text,text,text,text,text,text);
+drop function if exists public.create_public_order(text,uuid,integer,text,text,text,text,text,text,text,text,text,jsonb);
 create function public.create_public_order(p_store_slug text,p_product_id uuid,p_quantity integer,p_name text,p_phone text,p_whatsapp text default null,p_email text default null,p_country text default null,p_city text default null,p_district text default null,p_address text default null,p_notes text default null,p_custom_fields jsonb default '{}'::jsonb)
 returns table(order_number text,total numeric,currency text) language plpgsql security definer set search_path=public as $$
 declare v_store public.stores%rowtype;v_product public.products%rowtype;v_customer_id uuid;v_order_id uuid;v_counter integer;v_total numeric(12,2);begin

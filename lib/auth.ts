@@ -20,10 +20,9 @@ function encode(session: Session) { const body = Buffer.from(JSON.stringify(sess
 function decode(value: string): Session | null { const [body, signature] = value.split('.'); if (!body || !signature) return null; const expected = createHmac('sha256', secret()).update(body).digest('base64url'); const a = Buffer.from(signature); const b = Buffer.from(expected); if (a.length !== b.length || !timingSafeEqual(a, b)) return null; try { const session = JSON.parse(Buffer.from(body, 'base64url').toString()) as Session; return session.exp > Date.now() ? session : null; } catch { return null; } }
 
 function commonCookie() {
-  // Arena renders the live preview in a cross-site iframe. Supabase sessions must use
-  // SameSite=None + Secure there; the production site also remains HTTPS-only.
-  const crossSitePreview = useSupabase;
-  return { httpOnly: true, sameSite: crossSitePreview ? 'none' as const : 'lax' as const, secure: crossSitePreview || process.env.NODE_ENV === 'production', path: '/' };
+  // Zelvora uses same-origin API calls. Lax is more reliable on mobile browsers and
+  // still blocks cross-site subrequests; production cookies remain HTTPS-only.
+  return { httpOnly: true, sameSite: 'lax' as const, secure: process.env.NODE_ENV === 'production', path: '/' };
 }
 export function sessionCookie(userId: string) { return { name: COOKIE_NAME, value: encode({ userId, exp: Date.now() + 7 * 24 * 60 * 60 * 1000 }), options: { ...commonCookie(), maxAge: 7 * 24 * 60 * 60 } }; }
 export function supabaseSessionCookies(session: { access_token: string; refresh_token: string; expires_in?: number }) {
@@ -39,9 +38,12 @@ export const currentUser = cache(async (): Promise<CurrentUser | null> => {
   const cookieStore = await cookies();
   if (useSupabase) {
     const accessToken = cookieStore.get(SUPABASE_ACCESS_COOKIE)?.value; if (!accessToken) return null;
-    const client = createSupabasePublicClient(); const { data, error } = await client.auth.getUser(accessToken);
-    if (error || !data.user?.email) return null;
-    return { id: data.user.id, email: data.user.email, name: (data.user.user_metadata?.name as string | undefined) || 'Marchand', accessToken };
+    const client = createSupabasePublicClient();
+    // getClaims validates the JWT against Supabase JWKS and avoids a remote Auth
+    // round-trip on every dashboard/API request after the key has been cached.
+    const { data, error } = await client.auth.getClaims(accessToken); const claims=data?.claims as any;
+    if (error || !claims?.sub || !claims?.email) return null;
+    return { id: claims.sub, email: claims.email, name: claims.user_metadata?.name || 'Marchand', accessToken };
   }
   const raw = cookieStore.get(COOKIE_NAME)?.value; const session = raw ? decode(raw) : null; if (!session) return null;
   const db = await readDb(); const user = db.users.find((item) => item.id === session.userId); return user ? { id: user.id, email: user.email, name: user.name } : null;
