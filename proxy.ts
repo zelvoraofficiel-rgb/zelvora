@@ -2,7 +2,7 @@ import{NextRequest,NextResponse}from'next/server';
 import{createClient}from'@supabase/supabase-js';
 
 const ACCESS='zelvora_sb_access',REFRESH='zelvora_sb_refresh';
-const protectedPages=['/dashboard','/products','/orders','/clients','/analytics','/analysis','/studio','/settings','/subscription','/team','/notifications','/admin','/explore','/marketing'];
+const protectedPages=['/dashboard','/products','/orders','/clients','/analytics','/analysis','/studio','/settings','/subscription','/team','/notifications','/admin','/explore','/marketing','/onboarding'];
 function expiresSoon(token:string){try{const payload=JSON.parse(Buffer.from(token.split('.')[1]||'','base64url').toString());return !payload.exp||payload.exp*1000<Date.now()+120_000}catch{return true}}
 function cookieOptions(maxAge:number){return{httpOnly:true,sameSite:'lax' as const,secure:process.env.NODE_ENV==='production',path:'/',maxAge}}
 export async function proxy(request:NextRequest){
