@@ -8,8 +8,8 @@ import { useSupabase } from '@/lib/supabase/config';
 
 const scrypt = promisify(scryptCallback);
 const COOKIE_NAME = 'zelvora_session';
-const SUPABASE_ACCESS_COOKIE = 'zelvora_sb_access';
-const SUPABASE_REFRESH_COOKIE = 'zelvora_sb_refresh';
+export const SUPABASE_ACCESS_COOKIE = 'zelvora_sb_access';
+export const SUPABASE_REFRESH_COOKIE = 'zelvora_sb_refresh';
 const secret = () => process.env.AUTH_SECRET || 'development-only-secret-change-before-production';
 type Session = { userId: string; exp: number };
 export type CurrentUser = { id: string; email: string; name: string; accessToken?: string };

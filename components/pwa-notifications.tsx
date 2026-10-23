@@ -5,7 +5,7 @@ function beep(){try{const AudioContextClass=window.AudioContext||(window as any)
 export function PwaNotifications(){
  const[ready,setReady]=useState(false),[enabled,setEnabled]=useState(false),[busy,setBusy]=useState(false),audioUnlocked=useRef(false);
  useEffect(()=>{
-  if(!('serviceWorker'in navigator)||!('PushManager'in window))return;
+  if(!('serviceWorker'in navigator)||!('PushManager'in window)||!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY)return;
   setReady(true);navigator.serviceWorker.register('/sw.js').then(async reg=>setEnabled(Boolean(await reg.pushManager.getSubscription()))).catch(()=>{});
   let stopped=false;let known=new Set<string>();
   const check=async(first=false)=>{if(stopped||document.visibilityState!=='visible')return;try{const r=await fetch('/api/notifications',{cache:'no-store'});if(!r.ok)return;const j=await r.json();const unread=(j.notifications||[]).filter((n:any)=>!(n.read||n.readAt));(navigator as any).setAppBadge?.(unread.length);window.dispatchEvent(new CustomEvent('zelvora:unread',{detail:unread.length}));if(first){known=new Set(unread.map((n:any)=>n.id));return}let fresh=false;for(const n of unread){if(known.has(n.id))continue;known.add(n.id);fresh=true;if(Notification.permission==='granted'){const reg=await navigator.serviceWorker.ready;await reg.showNotification(n.title||'Nouvelle commande',{body:n.body||'Vous avez une nouvelle commande.',icon:'/icons/icon-192.png',badge:'/icons/icon-192.png',tag:`zelvora-${n.id}`,renotify:true,silent:false,vibrate:[300,150,300],data:{url:'/orders'}} as any)}}if(fresh&&audioUnlocked.current)beep()}catch{}};
