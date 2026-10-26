@@ -10,7 +10,19 @@ const bodySchema = z.object({
   storeName: z.string().trim().min(2, 'Donnez un nom à votre boutique.').max(80), tagline: z.string().trim().max(160).default('Découvrez notre sélection.'), primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).default('#6557F5'),
   product: z.object({ name: z.string().trim().min(2).max(140), description: z.string().trim().min(1).max(3000), price: z.number().finite().min(0).max(100000000), type: z.enum(['PHYSICAL', 'DIGITAL', 'SERVICE']).default('PHYSICAL'), source: z.enum(['LINK', 'IMAGE', 'MANUAL']), sourceUrl: z.string().url().max(2048).optional(), benefits: z.array(z.string().trim().min(1).max(180)).max(6).default([]), imageUrl: z.string().max(2048).optional() }).optional()
 });
-function permittedImageUrl(url: string | undefined) { return !url || url.startsWith('/uploads/') || Boolean(supabaseUrl && url.startsWith(`${supabaseUrl}/storage/v1/object/public/store-assets/`)); }
+function permittedImageUrl(url: string | undefined) {
+  if (!url || url.startsWith('/uploads/')) return true;
+  try {
+    const candidate = new URL(url);
+    const configured = process.env.NEXT_PUBLIC_SUPABASE_URL || supabaseUrl;
+    const correctStoragePath = candidate.pathname.startsWith('/storage/v1/object/public/store-assets/');
+    if (!correctStoragePath || candidate.protocol !== 'https:') return false;
+    // Prefer the configured project origin. The hostname fallback keeps onboarding
+    // operational when Cloudflare injects NEXT_PUBLIC_* only at build time.
+    if (configured) return candidate.origin === new URL(configured).origin;
+    return candidate.hostname.endsWith('.supabase.co');
+  } catch { return false; }
+}
 export async function POST(request: NextRequest) {
   try {
     assertSameOrigin(request); const user = await currentUser(); if (!user) throw new Error('Utilisateur non authentifié.'); const input = bodySchema.parse(await request.json()); if (input.product && !permittedImageUrl(input.product.imageUrl)) throw new Error('Image non autorisée. Téléversez-la depuis Zelvora.');
