@@ -1,21 +1,52 @@
-import{currentUser}from'@/lib/auth';import{readDb}from'@/lib/db';import{clientFor,fail,mapNotification,mapOrder,mapProduct,storeForUser}from'@/lib/supabase/data';import{useSupabase}from'@/lib/supabase/config';
-export async function GET(){
- const user=await currentUser();if(!user)return Response.json({error:'Utilisateur non authentifié.'},{status:401});
- if(useSupabase&&user.accessToken){
-  const appUser={...user,accessToken:user.accessToken},{organization,store}=await storeForUser(appUser);if(!store)return Response.json({user:{id:user.id,name:user.name,email:user.email},store:null,metrics:null,orders:[],notifications:[]});
-  const client=clientFor(user),since=new Date(Date.now()-29*86400000).toISOString().slice(0,10);
-  const[productsResult,recentOrdersResult,notificationResult,creditsResult,metricsResult]=await Promise.all([
-   client.from('products').select('id,store_id,name,slug,status,price,product_type,image_path,benefits,specifications,source_type,created_at').eq('store_id',store.id).order('created_at',{ascending:false}).limit(100),
-   client.from('orders').select('id,store_id,customer_id,number,status,payment_status,payment_method,currency,total,quantity,product_id,product_name,delivery,customer_note,created_at').eq('store_id',store.id).order('created_at',{ascending:false}).limit(6),
-   client.from('notifications').select('id,store_id,user_id,title,body,read_at,created_at').eq('store_id',store.id).order('created_at',{ascending:false}).limit(5),
-   client.from('ai_credits').select('balance,monthly_limit').eq('organization_id',organization.id).maybeSingle(),
-   client.rpc('get_store_dashboard_metrics',{p_store_id:store.id,p_since:since})
-  ]);
-  for(const result of[productsResult,recentOrdersResult,notificationResult,creditsResult])if(result.error)fail(result.error);
-  let metrics:any=metricsResult.data;
-  if(metricsResult.error){const[{data:orders,error:oe},{count:customers,error:ce},{data:analytics,error:ae}]=await Promise.all([client.from('orders').select('status,total').eq('store_id',store.id),client.from('customers').select('id',{count:'exact',head:true}).eq('store_id',store.id),client.from('analytics_daily').select('visitors').eq('store_id',store.id).gte('day',since)]);if(oe||ce||ae)fail(oe||ce||ae);const valid=(orders||[]).filter((x:any)=>x.status!=='CANCELLED'),revenue=valid.reduce((n:number,x:any)=>n+Number(x.total),0);metrics={orders:(orders||[]).length,revenue,averageOrder:valid.length?revenue/valid.length:0,pending:(orders||[]).filter((x:any)=>['NEW','CONFIRMED','PREPARING','SHIPPED'].includes(x.status)).length,delivered:(orders||[]).filter((x:any)=>x.status==='DELIVERED').length,visits:(analytics||[]).reduce((n:number,x:any)=>n+Number(x.visitors||0),0),customers:customers||0}}
-  metrics.conversion=metrics.visits?Math.round((Number(metrics.orders)/Number(metrics.visits))*1000)/10:0;
-  return Response.json({user:{id:user.id,name:user.name,email:user.email},store,products:(productsResult.data||[]).map(mapProduct),metrics,orders:(recentOrdersResult.data||[]).map(mapOrder),notifications:(notificationResult.data||[]).map(mapNotification),aiCredits:{used:0,limit:creditsResult.data?.monthly_limit||5}},{headers:{'Cache-Control':'private, no-store'}})
- }
- const db=await readDb(),organization=db.organizations.find(x=>x.userId===user.id),store=organization&&db.stores.find(x=>x.organizationId===organization.id);if(!store)return Response.json({user,store:null,metrics:null,orders:[],notifications:[]});const orders=db.orders.filter(x=>x.storeId===store.id).sort((a,b)=>b.createdAt.localeCompare(a.createdAt)),products=db.products.filter(x=>x.storeId===store.id),customers=db.customers.filter(x=>x.storeId===store.id),notifications=db.notifications.filter(x=>x.storeId===store.id).sort((a,b)=>b.createdAt.localeCompare(a.createdAt)),revenue=orders.filter(x=>x.status!=='CANCELLED').reduce((n,x)=>n+x.total,0);return Response.json({user,store,products,metrics:{revenue,orders:orders.length,customers:customers.length,averageOrder:orders.length?revenue/orders.length:0,pending:orders.filter(x=>['NEW','CONFIRMED','PREPARING','SHIPPED'].includes(x.status)).length,delivered:orders.filter(x=>x.status==='DELIVERED').length},orders:orders.slice(0,6),notifications:notifications.slice(0,5),aiCredits:{used:0,limit:5}})
+import { createClient } from '@supabase/supabase-js';
+import { currentUser } from '@/lib/auth';
+import { readDb } from '@/lib/db';
+import { clientFor, fail, mapNotification, mapOrder, mapProduct, mapStore, storeForUser } from '@/lib/supabase/data';
+import { supabaseServiceRoleKey, supabaseUrl, useSupabase } from '@/lib/supabase/config';
+
+export async function GET() {
+  const user = await currentUser();
+  if (!user) return Response.json({ error: 'Utilisateur non authentifié.' }, { status: 401 });
+  if (useSupabase && user.accessToken) {
+    const configuredUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || supabaseUrl;
+    const service = configuredUrl && supabaseServiceRoleKey ? createClient(configuredUrl, supabaseServiceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } }) : null;
+    let store: any = null, organizationId: string | null = null;
+    // The authenticated user id comes from a verified Supabase JWT. Querying by
+    // owner_id avoids a fresh-account RLS propagation delay hiding a store that
+    // onboarding has already created.
+    if (service) {
+      const { data, error } = await service.from('stores').select('*').eq('owner_id', user.id).order('created_at', { ascending: true }).limit(1).maybeSingle();
+      if (error) fail(error, 'Impossible de charger votre boutique.');
+      if (data) { store = mapStore(data); organizationId = data.organization_id; }
+    } else {
+      const result = await storeForUser({ ...user, accessToken: user.accessToken });
+      store = result.store; organizationId = result.organization.id;
+    }
+    if (!store) return Response.json({ user: { id: user.id, name: user.name, email: user.email }, store: null, products: [], metrics: null, orders: [], notifications: [] }, { headers: { 'Cache-Control': 'private, no-store' } });
+    const client = service || clientFor(user), since = new Date(Date.now() - 29 * 86400000).toISOString().slice(0, 10);
+    const [productsResult, recentOrdersResult, notificationResult, creditsResult, metricsResult] = await Promise.all([
+      client.from('products').select('id,store_id,name,slug,status,price,product_type,image_path,benefits,specifications,source_type,created_at').eq('store_id', store.id).order('created_at', { ascending: false }).limit(100),
+      client.from('orders').select('id,store_id,customer_id,number,status,payment_status,payment_method,currency,total,quantity,product_id,product_name,delivery,customer_note,created_at').eq('store_id', store.id).order('created_at', { ascending: false }).limit(6),
+      client.from('notifications').select('id,store_id,user_id,title,body,read_at,created_at').eq('store_id', store.id).order('created_at', { ascending: false }).limit(5),
+      client.from('ai_credits').select('balance,monthly_limit').eq('organization_id', organizationId).maybeSingle(),
+      client.rpc('get_store_dashboard_metrics', { p_store_id: store.id, p_since: since })
+    ]);
+    for (const result of [productsResult, recentOrdersResult, notificationResult, creditsResult]) if (result.error) fail(result.error);
+    let metrics: any = metricsResult.data;
+    if (metricsResult.error) {
+      const [{ data: orders, error: oe }, { count: customers, error: ce }, { data: analytics, error: ae }] = await Promise.all([
+        client.from('orders').select('status,total').eq('store_id', store.id), client.from('customers').select('id', { count: 'exact', head: true }).eq('store_id', store.id), client.from('analytics_daily').select('visitors').eq('store_id', store.id).gte('day', since)
+      ]);
+      if (oe || ce || ae) fail(oe || ce || ae);
+      const valid = (orders || []).filter((x: any) => x.status !== 'CANCELLED'), revenue = valid.reduce((n: number, x: any) => n + Number(x.total), 0);
+      metrics = { orders: (orders || []).length, revenue, averageOrder: valid.length ? revenue / valid.length : 0, pending: (orders || []).filter((x: any) => ['NEW', 'CONFIRMED', 'PREPARING', 'SHIPPED'].includes(x.status)).length, delivered: (orders || []).filter((x: any) => x.status === 'DELIVERED').length, visits: (analytics || []).reduce((n: number, x: any) => n + Number(x.visitors || 0), 0), customers: customers || 0 };
+    }
+    metrics ||= { orders: 0, revenue: 0, averageOrder: 0, pending: 0, delivered: 0, visits: 0, customers: 0 };
+    metrics.conversion = metrics.visits ? Math.round((Number(metrics.orders) / Number(metrics.visits)) * 1000) / 10 : 0;
+    return Response.json({ user: { id: user.id, name: user.name, email: user.email }, store, products: (productsResult.data || []).map(mapProduct), metrics, orders: (recentOrdersResult.data || []).map(mapOrder), notifications: (notificationResult.data || []).map(mapNotification), aiCredits: { used: 0, limit: creditsResult.data?.monthly_limit || 5 } }, { headers: { 'Cache-Control': 'private, no-store' } });
+  }
+  const db = await readDb(), organization = db.organizations.find(x => x.userId === user.id), store = organization && db.stores.find(x => x.organizationId === organization.id);
+  if (!store) return Response.json({ user, store: null, products: [], metrics: null, orders: [], notifications: [] });
+  const orders = db.orders.filter(x => x.storeId === store.id).sort((a, b) => b.createdAt.localeCompare(a.createdAt)), products = db.products.filter(x => x.storeId === store.id), customers = db.customers.filter(x => x.storeId === store.id), notifications = db.notifications.filter(x => x.storeId === store.id).sort((a, b) => b.createdAt.localeCompare(a.createdAt)), revenue = orders.filter(x => x.status !== 'CANCELLED').reduce((n, x) => n + x.total, 0);
+  return Response.json({ user, store, products, metrics: { revenue, orders: orders.length, customers: customers.length, averageOrder: orders.length ? revenue / orders.length : 0, pending: orders.filter(x => ['NEW', 'CONFIRMED', 'PREPARING', 'SHIPPED'].includes(x.status)).length, delivered: orders.filter(x => x.status === 'DELIVERED').length }, orders: orders.slice(0, 6), notifications: notifications.slice(0, 5), aiCredits: { used: 0, limit: 5 } });
 }

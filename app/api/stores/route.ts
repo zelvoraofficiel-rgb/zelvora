@@ -8,7 +8,7 @@ import { ensureOrganization, fail, mapProduct, mapStore } from '@/lib/supabase/d
 import { supabaseServiceRoleKey, supabaseUrl, useSupabase } from '@/lib/supabase/config';
 
 const bodySchema = z.object({
-  storeName: z.string().trim().min(2, 'Donnez un nom à votre boutique.').max(80), tagline: z.string().trim().max(160).default('Découvrez notre sélection.'), primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).default('#6557F5'),
+  storeName: z.string().trim().min(2, 'Donnez un nom à votre boutique.').max(80), brandName:z.string().trim().max(80).optional(),businessCategory:z.string().trim().max(100).optional(),whatsapp:z.string().trim().max(30).optional(),countryCode:z.string().regex(/^[A-Z]{2}$/).default('NE'),currency:z.enum(['XOF','NGN','GHS','MAD','EUR','USD']).default('XOF'), tagline: z.string().trim().max(160).default('Découvrez notre sélection.'), primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).default('#6557F5'),
   product: z.object({ name: z.string().trim().min(2).max(140), description: z.string().trim().min(1).max(3000), price: z.number().finite().min(0).max(100000000), type: z.enum(['PHYSICAL', 'DIGITAL', 'SERVICE']).default('PHYSICAL'), source: z.enum(['LINK', 'IMAGE', 'MANUAL']), sourceUrl: z.string().url().max(2048).optional(), benefits: z.array(z.string().trim().min(1).max(180)).max(6).default([]), imageUrl: z.string().max(2048).optional() }).optional()
 });
 function permittedImageUrl(url: string | undefined) {
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
       let createdStore = false;
       if (!storeRow) {
         const timestampSlug = `${slugify(input.storeName)}-${crypto.randomUUID().slice(0, 7)}`;
-        const { data, error: storeError } = await service.from('stores').insert({ organization_id: organization.id, owner_id: user.id, name: input.storeName, slug: timestampSlug, tagline: input.tagline || 'Découvrez notre sélection.', status: 'DRAFT', currency: 'XOF', country_code: 'NE', primary_color: input.primaryColor, secondary_color: '#B9F6D0' }).select('*').single();
+        const { data, error: storeError } = await service.from('stores').insert({ organization_id: organization.id, owner_id: user.id, name: input.storeName,brand_name:input.brandName||null,business_category:input.businessCategory||null,whatsapp:input.whatsapp||null,onboarding_created:true, slug: timestampSlug, tagline: input.tagline || 'Découvrez notre sélection.', status: 'DRAFT', currency: input.currency, country_code: input.countryCode, primary_color: input.primaryColor, secondary_color: '#B9F6D0' }).select('*').single();
         if (storeError || !data) fail(storeError, 'Impossible de créer la boutique.');
         storeRow = data; createdStore = true;
       }
