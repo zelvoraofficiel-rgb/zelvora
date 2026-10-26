@@ -1,10 +1,11 @@
 import { NextRequest } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { currentUser } from '@/lib/auth';
 import { id, mutateDb, now, slugify, uniqueSlug } from '@/lib/db';
 import { apiError, assertSameOrigin } from '@/lib/security';
-import { clientFor, ensureOrganization, fail, mapProduct, mapStore } from '@/lib/supabase/data';
-import { supabaseUrl, useSupabase } from '@/lib/supabase/config';
+import { ensureOrganization, fail, mapProduct, mapStore } from '@/lib/supabase/data';
+import { supabaseServiceRoleKey, supabaseUrl, useSupabase } from '@/lib/supabase/config';
 
 const bodySchema = z.object({
   storeName: z.string().trim().min(2, 'Donnez un nom à votre boutique.').max(80), tagline: z.string().trim().max(160).default('Découvrez notre sélection.'), primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).default('#6557F5'),
@@ -27,14 +28,37 @@ export async function POST(request: NextRequest) {
   try {
     assertSameOrigin(request); const user = await currentUser(); if (!user) throw new Error('Utilisateur non authentifié.'); const input = bodySchema.parse(await request.json()); if (input.product && !permittedImageUrl(input.product.imageUrl)) throw new Error('Image non autorisée. Téléversez-la depuis Zelvora.');
     if (useSupabase && user.accessToken) {
-      const organization = await ensureOrganization({ ...user, accessToken: user.accessToken }); const client = clientFor(user);
-      const { count, error: countError } = await client.from('stores').select('id', { count: 'exact', head: true }).eq('organization_id', organization.id); if (countError) fail(countError); if ((count || 0) >= 1) throw new Error('La limite du plan gratuit est atteinte : une boutique.');
-      const timestampSlug = `${slugify(input.storeName)}-${crypto.randomUUID().slice(0, 7)}`;
-      const { data: storeRow, error: storeError } = await client.from('stores').insert({ organization_id: organization.id, owner_id: user.id, name: input.storeName, slug: timestampSlug, tagline: input.tagline || 'Découvrez notre sélection.', status: 'DRAFT', currency: 'XOF', country_code: 'NE', primary_color: input.primaryColor, secondary_color: '#B9F6D0' }).select('*').single();
-      if (storeError) fail(storeError, 'Impossible de créer la boutique.');
-      let product=null;
-      if(input.product){const { data: productRow, error: productError } = await client.from('products').insert({ store_id: storeRow.id, name: input.product.name, slug: `${slugify(input.product.name)}-${crypto.randomUUID().slice(0, 5)}`, description: input.product.description, price: input.product.price, product_type: input.product.type, status: 'PUBLISHED', image_path: input.product.imageUrl || null, benefits: input.product.benefits, specifications: [], source_type: input.product.source, source_url: input.product.sourceUrl || null }).select('*').single();if(productError){await client.from('stores').delete().eq('id',storeRow.id);fail(productError,'Impossible de créer le produit.')}product=mapProduct(productRow)}
-      return Response.json({ store: mapStore(storeRow), product, publicUrl: `/store/${storeRow.slug}` }, { status: 201 });
+      const organization = await ensureOrganization({ ...user, accessToken: user.accessToken });
+      const configuredUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || supabaseUrl;
+      if (!configuredUrl || !supabaseServiceRoleKey) throw new Error('Configuration serveur Supabase incomplète. Contactez l’administrateur.');
+      // Authentication and organization ownership were established above with the
+      // user's JWT. The service client makes the final two inserts reliable even
+      // when a newly-created user's RLS/JWT state has not propagated yet.
+      const service = createClient(configuredUrl, supabaseServiceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } });
+      const { data: membership, error: membershipError } = await service.from('organization_members').select('organization_id').eq('organization_id', organization.id).eq('user_id', user.id).maybeSingle();
+      if (membershipError || !membership) throw new Error('Vous n’êtes pas autorisé à créer cette boutique.');
+      const { data: existing, error: existingError } = await service.from('stores').select('*').eq('organization_id', organization.id).order('created_at', { ascending: true }).limit(1).maybeSingle();
+      if (existingError) fail(existingError, 'Impossible de vérifier votre boutique.');
+      let storeRow = existing;
+      let createdStore = false;
+      if (!storeRow) {
+        const timestampSlug = `${slugify(input.storeName)}-${crypto.randomUUID().slice(0, 7)}`;
+        const { data, error: storeError } = await service.from('stores').insert({ organization_id: organization.id, owner_id: user.id, name: input.storeName, slug: timestampSlug, tagline: input.tagline || 'Découvrez notre sélection.', status: 'DRAFT', currency: 'XOF', country_code: 'NE', primary_color: input.primaryColor, secondary_color: '#B9F6D0' }).select('*').single();
+        if (storeError || !data) fail(storeError, 'Impossible de créer la boutique.');
+        storeRow = data; createdStore = true;
+      }
+      let product = null;
+      if (input.product) {
+        const { data: currentProduct, error: currentProductError } = await service.from('products').select('*').eq('store_id', storeRow.id).order('created_at', { ascending: true }).limit(1).maybeSingle();
+        if (currentProductError) fail(currentProductError, 'Impossible de vérifier le produit.');
+        if (currentProduct) product = mapProduct(currentProduct);
+        else {
+          const { data: productRow, error: productError } = await service.from('products').insert({ store_id: storeRow.id, name: input.product.name, slug: `${slugify(input.product.name)}-${crypto.randomUUID().slice(0, 5)}`, description: input.product.description, price: input.product.price, product_type: input.product.type, status: 'PUBLISHED', image_path: input.product.imageUrl || null, benefits: input.product.benefits, specifications: [], source_type: input.product.source, source_url: input.product.sourceUrl || null }).select('*').single();
+          if (productError || !productRow) { if (createdStore) await service.from('stores').delete().eq('id', storeRow.id); fail(productError, 'Impossible de créer le produit.'); }
+          product = mapProduct(productRow);
+        }
+      }
+      return Response.json({ store: mapStore(storeRow), product, publicUrl: `/store/${storeRow.slug}`, recovered: !createdStore }, { status: createdStore ? 201 : 200 });
     }
     const result = await mutateDb((db) => { const organization = db.organizations.find((item) => item.userId === user.id); if (!organization) throw new Error('Organisation introuvable.'); if (db.stores.filter((item) => item.organizationId === organization.id).length >= 1) throw new Error('La limite du plan gratuit est atteinte : une boutique.'); const createdAt = now(); const storeSlug = uniqueSlug(db.stores.map((item) => item.slug), input.storeName); const store = { id: id(), organizationId: organization.id, ownerId: user.id, name: input.storeName, slug: storeSlug, tagline: input.tagline || 'Découvrez notre sélection.', status: 'DRAFT' as const, currency: 'XOF', countryCode: 'NE', primaryColor: input.primaryColor, secondaryColor: '#B9F6D0', createdAt }; let product;db.stores.push(store);if(input.product){product={ id: id(), storeId: store.id, name: input.product.name, slug: uniqueSlug([], input.product.name), description: input.product.description, price: input.product.price, type: input.product.type, status: 'PUBLISHED' as const, imageUrl: input.product.imageUrl, benefits: input.product.benefits, specifications: [], source: input.product.source, sourceUrl: input.product.sourceUrl, createdAt };db.products.push(product)}return { store, product }; });
     return Response.json({ store: result.store, product: result.product, publicUrl: `/store/${result.store.slug}` }, { status: 201 });
