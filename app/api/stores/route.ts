@@ -58,6 +58,13 @@ export async function POST(request: NextRequest) {
           product = mapProduct(productRow);
         }
       }
+      // Completing onboarding means the merchant expects the imported product to be
+      // immediately visible on the public store. Publishing here also repairs a
+      // store left in DRAFT by an interrupted previous attempt.
+      const publishedAt = new Date().toISOString();
+      const { data: publishedStore, error: publishError } = await service.from('stores').update({ status: 'PUBLISHED', published_at: publishedAt, updated_at: publishedAt }).eq('id', storeRow.id).eq('owner_id', user.id).select('*').single();
+      if (publishError || !publishedStore) fail(publishError, 'Boutique créée, mais sa publication a échoué.');
+      storeRow = publishedStore;
       return Response.json({ store: mapStore(storeRow), product, publicUrl: `/store/${storeRow.slug}`, recovered: !createdStore }, { status: createdStore ? 201 : 200 });
     }
     const result = await mutateDb((db) => { const organization = db.organizations.find((item) => item.userId === user.id); if (!organization) throw new Error('Organisation introuvable.'); if (db.stores.filter((item) => item.organizationId === organization.id).length >= 1) throw new Error('La limite du plan gratuit est atteinte : une boutique.'); const createdAt = now(); const storeSlug = uniqueSlug(db.stores.map((item) => item.slug), input.storeName); const store = { id: id(), organizationId: organization.id, ownerId: user.id, name: input.storeName, slug: storeSlug, tagline: input.tagline || 'Découvrez notre sélection.', status: 'DRAFT' as const, currency: 'XOF', countryCode: 'NE', primaryColor: input.primaryColor, secondaryColor: '#B9F6D0', createdAt }; let product;db.stores.push(store);if(input.product){product={ id: id(), storeId: store.id, name: input.product.name, slug: uniqueSlug([], input.product.name), description: input.product.description, price: input.product.price, type: input.product.type, status: 'PUBLISHED' as const, imageUrl: input.product.imageUrl, benefits: input.product.benefits, specifications: [], source: input.product.source, sourceUrl: input.product.sourceUrl, createdAt };db.products.push(product)}return { store, product }; });
