@@ -1,0 +1,15 @@
+begin;
+alter table public.profiles add column if not exists discovery_source text;
+alter table public.profiles add column if not exists ecommerce_level text;
+alter table public.profiles add column if not exists product_import_method text;
+alter table public.stores add column if not exists theme_style text not null default 'SIGNATURE';
+alter table public.profiles drop constraint if exists profiles_discovery_source_check;
+alter table public.profiles add constraint profiles_discovery_source_check check(discovery_source is null or discovery_source in('YOUTUBE','FACEBOOK','TIKTOK','INSTAGRAM','REFERRAL','OTHER'));
+alter table public.profiles drop constraint if exists profiles_ecommerce_level_check;
+alter table public.profiles add constraint profiles_ecommerce_level_check check(ecommerce_level is null or ecommerce_level in('BEGINNER','INTERMEDIATE','EXPERT'));
+alter table public.profiles drop constraint if exists profiles_product_import_method_check;
+alter table public.profiles add constraint profiles_product_import_method_check check(product_import_method is null or product_import_method in('PHOTO','LINK'));
+alter table public.stores drop constraint if exists stores_theme_style_check;
+alter table public.stores add constraint stores_theme_style_check check(theme_style in('SIGNATURE','MINIMAL'));
+notify pgrst,'reload schema';
+commit;
