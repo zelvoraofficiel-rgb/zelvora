@@ -13,7 +13,7 @@ alter table public.stores add column if not exists business_category text;
 alter table public.stores add column if not exists whatsapp text;
 alter table public.stores add column if not exists onboarding_created boolean not null default false;
 alter table public.profiles drop constraint if exists profiles_onboarding_step_check;
-alter table public.profiles add constraint profiles_onboarding_step_check check(onboarding_step between 1 and 8);
+alter table public.profiles add constraint profiles_onboarding_step_check check(onboarding_step between 1 and 9);
 create index if not exists profiles_onboarding_incomplete_idx on public.profiles(id,onboarding_step) where onboarding_completed_at is null;
 notify pgrst,'reload schema';
 commit;
